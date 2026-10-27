@@ -1,4 +1,4 @@
-# CMT° Remainder Verification
+# CMT° HumanAI Research & Development Mathematically Showed AI Hallucinations as Error Divergence via Taylor Expansion and Lagrange Remainder Verification
 
 Open repository for explicit remainder accounting in AI-assisted mathematical work.
 
@@ -64,6 +64,105 @@ This keeps both error sources explicit.
 - The generative residual is not silently absorbed.
 - The sketch is treated as a stochastic prediction, not as a theorem certified by exact symbolic execution.
 
+## Worked Example: Classical Approximation Plus Generative Residual
+
+Consider the target function
+
+\[
+T(x) = e^x
+\]
+
+near \(x=0\). The classical Taylor expansion is
+
+\[
+e^x = 1 + x + \frac{x^2}{2} + \frac{x^3}{6} + \cdots
+\]
+
+If we truncate after the quadratic term, we obtain
+
+\[
+P_2(x)=1+x+\frac{x^2}{2},
+\]
+
+with the classical remainder
+
+\[
+R_2(x) = e^\xi \frac{x^3}{6}
+\quad\text{for some }\xi\text{ between }0\text{ and }x.
+\]
+
+So the usual decomposition is
+
+\[
+T(x)=P_2(x)+R_2(x).
+\]
+
+This is the exact analytic statement: the error from truncating the series is \(R_2(x)\), and it is governed by classical estimates.
+
+Now suppose an autoregressive language model is asked to produce a proof-like sketch of this expansion. Instead of a verified symbolic derivation, it outputs a generated text such as:
+
+> "Using the exponential series, \(e^x = 1 + x + x^2/2 + x^3/6 + \cdots\)."
+
+This output is not a certificate of exact symbolic execution. It is a stochastic prediction conditioned on prior context. The observed sketch \(S\) therefore does not equal \(T\) exactly, even if it appears familiar and even if the leading terms are correct.
+
+We write
+
+\[
+S = T + E_{\mathrm{classical}} + R_{\mathrm{gen}}.
+\]
+
+In this example:
+
+- \(T(x)=e^x\) is the mathematical target;
+- \(E_{\mathrm{classical}} = R_2(x)\) is the ordinary truncation error of the Taylor series;
+- \(R_{\mathrm{gen}}\) is the model-generated residual, which captures any mismatch caused by token-level uncertainty, context dependence, hallucinated intermediate steps, omitted terms, or subtly incorrect symbolic presentation.
+
+For instance, the model might write:
+
+\[
+S(x)=1+x+\frac{x^2}{2}+\frac{x^3}{24}+\cdots
+\]
+
+which is not the true expansion of \(e^x\). The classical Taylor remainder tells us the correct cubic term should be \(x^3/6\), but the model output still contains a generative residual:
+
+\[
+R_{\mathrm{gen}}(x)=S(x)-T(x).
+\]
+
+This illustrates the key principle:
+
+\[
+\text{Observed sketch} = \text{classical main term} + O(\text{classical error}) + R_{\mathrm{gen}}.
+\]
+
+The important point is that a valid classical bound on \(R_2(x)\) does not imply that \(R_{\mathrm{gen}}=0\). A model may produce a leading-order expansion that looks correct while still carrying a nonzero stochastic residual. In other words, the generation can be directionally right without being symbolically exact.
+
+### Reporting this example in balanced form
+
+A disciplined accounting statement would be:
+
+\[
+S(x) = P_2(x) + R_2(x) + R_{\mathrm{gen}}(x),
+\]
+
+with:
+
+- \(P_2(x)\) as the classical approximation,
+- \(R_2(x)\) as the verified analytic remainder,
+- \(R_{\mathrm{gen}}(x)\) as the explicit generative residual.
+
+This makes the decomposition transparent:
+
+- the classical mathematics remains independently checkable;
+- the model artifact is treated as a probabilistic prediction rather than a theorem;
+- the residual is not silently hidden under the language of a familiar approximation.
+
+### Why this example matters
+
+The example is deliberately simple. It shows that the repository's core claim is not anti-analytic. The point is not that classical expansion is invalid. The point is that an AI-generated proof sketch is not identical to an exact symbolic derivation just because its first terms resemble a correct formula.
+
+A model may match the leading-order structure while still carrying a residual that remains outside the classical error model. That residual belongs in the accounting, not in the footnotes.
+
 ## Why the Generative Remainder Matters
 
 In an autoregressive system, each token is generated conditionally on the previously generated context. A proof-like output is therefore not a deterministic function of the context in the same way as an explicit mathematical derivation. Local predictive mistakes can accumulate across steps, and the final text may look coherent while still carrying a residual mismatch between the generated argument and the underlying mathematical truth.
@@ -79,6 +178,176 @@ In other words:
 - yet the model-generated output still carries a nonzero generative error.
 
 The residual therefore belongs in the accounting, not in the footnotes.
+
+# Worked Example: Binomial Expansion with Explicit Generative Residual
+
+Consider the target function
+
+\[
+T(x) = (1+x)^r,
+\]
+
+where \(r \in \mathbb{R}\) and \(|x|<1\). The classical binomial expansion is
+
+\[
+(1+x)^r
+=
+\sum_{k=0}^{n} \binom{r}{k} x^k + R_n(x),
+\]
+
+where
+
+\[
+P_n(x) := \sum_{k=0}^{n} \binom{r}{k} x^k
+\]
+
+is the finite-order approximation and
+
+\[
+R_n(x) = \sum_{k=n+1}^{\infty} \binom{r}{k} x^k
+\]
+
+is the analytic remainder.
+
+Now suppose an autoregressive model is prompted to produce a “proof-like” expansion of \((1+x)^r\). The generated sketch \(S\) may be written as
+
+\[
+S(x)
+=
+1 + rx + \frac{r(r-1)}{2}x^2 + \cdots + \frac{r(r-1)\cdots(r-n+1)}{n!}x^n.
+\]
+
+This output may look mathematically plausible and familiar, yet it is still a model-generated artifact, not a verified symbolic derivation. The total decomposition is
+
+\[
+S(x) = P_n(x) + R_n(x) + R_{\mathrm{gen}}(x).
+\]
+
+Here:
+
+- \(P_n(x)\) is the classical approximation,
+- \(R_n(x)\) is the true analytic remainder,
+- \(R_{\mathrm{gen}}(x)\) is the residual induced by model approximation and decoding behavior.
+
+If the model omits a term, miscomputes a coefficient, or introduces a syntactically polished but structurally incorrect expression, then \(R_{\mathrm{gen}}(x)\) is nonzero even if the leading terms are familiar. The important issue is not whether the output resembles a standard expansion, but whether it is exact under independent validation.
+
+This yields the explicit accounting statement
+
+\[
+\text{Generated sketch}
+=
+\text{classical binomial approximation}
++
+\text{classical remainder}
++
+\text{generative residual}.
+\]
+
+In notation:
+
+\[
+S(x) = \sum_{k=0}^{n} \binom{r}{k}x^k + R_n(x) + R_{\mathrm{gen}}(x).
+\]
+
+The central methodological point is this: a valid classical bound on \(R_n(x)\) does not imply that \(R_{\mathrm{gen}}(x)=0\). The model may capture the right first-order structure while still carrying a residual error from stochastic generation.
+
+Thus, the disciplined reporting protocol is:
+
+\[
+\boxed{
+S(x) = P_n(x) + R_n(x) + R_{\mathrm{gen}}(x)
+}
+\]
+
+rather than the weaker and misleading claim
+
+\[
+S(x) \approx P_n(x)
+\]
+
+without explicit remainder accounting.
+
+# Specialized Example: Fourier Series, Truncation Error, and Generative Residual
+
+Consider a periodic function \(f\in L^2[-\pi,\pi]\) with Fourier series
+
+\[
+f(x) \sim \sum_{k=-\infty}^{\infty} \hat f(k)e^{ikx}.
+\]
+
+The classical \(N\)-th partial sum is
+
+\[
+S_N f(x) = \sum_{k=-N}^{N} \hat f(k)e^{ikx}.
+\]
+
+For a sufficiently smooth function, the partial sums converge to \(f\) in \(L^2\), and the truncation error is
+
+\[
+f(x) - S_N f(x)
+=
+\sum_{|k|>N} \hat f(k)e^{ikx}.
+\]
+
+The remainder may be estimated by Parseval’s identity:
+
+\[
+\|f - S_N f\|_2^2
+=
+\sum_{|k|>N} |\hat f(k)|^2.
+\]
+
+This is the classical analytic remainder. It reflects the approximation error of truncating the Fourier series.
+
+Now suppose an autoregressive model is asked to produce a proof-like description of the convergence of the Fourier series. The generated output may state, in polished form, that
+
+\[
+f(x) \approx \sum_{k=-N}^{N} \hat f(k)e^{ikx}
+\]
+
+and then conclude that the approximation is “asymptotically exact.” This may be persuasive and may even be correct in a rough heuristic sense. But it is not a proof of convergence unless the exact remainder is controlled:
+
+\[
+f(x)=S_N f(x)+R_N(x),
+\]
+
+with
+
+\[
+R_N(x) = \sum_{|k|>N} \hat f(k)e^{ikx}.
+\]
+
+The model-generated artifact \(S\) therefore should be decomposed as
+
+\[
+S = f + E_{\mathrm{classical}} + R_{\mathrm{gen}},
+\]
+
+where:
+
+- \(E_{\mathrm{classical}} = R_N(x)\) is the classical truncation error,
+- \(R_{\mathrm{gen}}\) is the residual caused by model-generated inaccuracies, omitted terms, or stylistic over-confidence.
+
+The key point is that a valid convergence estimate for \(S_N f\) does not imply that the model output is exact. Even if the leading coefficients are correct and the partial sums converge in the classical sense, the generated textual output may still contain a nonzero \(R_{\mathrm{gen}}\), arising from local token-level mistakes, a partial or omitted argument, or the use of a “plausible” but not fully justified claim.
+
+This example is particularly instructive because Fourier convergence is a canonical setting where classical remainder analysis is well developed. The model may reproduce the familiar structure of the convergence argument, yet the generated output remains a probabilistic artifact until its symbolic claims are independently checked. The proper accounting is therefore
+
+\[
+\text{Generated Fourier argument}
+=
+\text{classical partial sum}
++
+\text{classical remainder}
++
+\text{generative residual}.
+\]
+
+This makes explicit the difference between:
+- a mathematically justified approximation,
+- a model-produced narrative that looks like a proof,
+- and a formally verified argument.
+
+In the Fourier setting, the residual is not only a matter of notation. It is a question of whether the generated statement has the correct convergence criterion, bounded remainder, and justification for the limiting behavior. The humanAI co-learning task is not to confuse “looks like a valid argument” with “is a valid argument.” It is to preserve the residual in view and make sure it is accounted for.
 
 ## Protocol Rules
 
